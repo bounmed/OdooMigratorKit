@@ -1,0 +1,44 @@
+services:
+  upgrade17:
+    build:
+      context: ./Upgrade17
+      dockerfile: Dockerfile.Upgrade
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "0:0"
+    volumes:
+      - odoo-data:/var/lib/odoo
+    environment:
+      SKIP_PRE_MIGRATION: ${SKIP_PRE_MIGRATION:-false}  # Default to false
+      DB_HOST: ${DB_HOST:-db}
+      DB_USER: ${DB_USER:-odoo}
+      DB_PASSWORD: ${DB_PASSWORD:-odoo}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-odoo}
+      FILESTORE_PATH: /var/lib/odoo/filestore
+
+  odoov17:
+    build:
+      context: ./Upgrade17
+      dockerfile: Dockerfile.Odoo
+    profiles: ["manual"]
+    depends_on:
+      - db
+    ports:
+      - "8174:8069"
+      - "8175:8072" # live chat
+    tty: true
+    environment:
+      HOST: ${DB_HOST}
+      USER: ${DB_USER}
+      PASSWORD: ${DB_PASSWORD}
+      LANG: ${LANG}
+      LANGUAGE: ${LANGUAGE}
+      LC_ALL: ${LC_ALL}
+    volumes:
+      - ./Upgrade17/odoo.conf:/etc/odoo/odoo.conf
+      - ./Upgrade17/custom-addons:/mnt/custom-addons
+      - odoo-data:/var/lib/odoo:z
+    restart: unless-stopped
+    user: "0:0"

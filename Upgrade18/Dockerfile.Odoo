@@ -1,0 +1,30 @@
+# Fixed Odoo 17 Dockerfile for archived Debian Stretch
+FROM odoo:17.0
+
+USER root
+
+# Fix archived Debian repos
+RUN rm -f /etc/apt/sources.list.d/* /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security stretch/updates main" >> /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+# -----------------------------
+# System dependencies (MINIMAL - only what's absolutely needed)
+# -----------------------------
+# Update without verifying keys and install packages
+RUN apt-get -o Acquire::Check-Valid-Until=false \
+    -o Acquire::AllowInsecureRepositories=true \
+    -o Acquire::AllowDowngradeToInsecureRepositories=true \
+    update && \
+    apt-get install -y --allow-unauthenticated \
+    # Only essential packages - most are already in the odoo:10.0 image
+    git \
+    curl \
+    wget
+
+RUN pip3 install openupgradelib
+
+USER odoo
+
+# Default command
+CMD ["odoo"]

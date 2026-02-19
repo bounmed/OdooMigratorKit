@@ -1,0 +1,19 @@
+[options]
+addons_path = /opt/odoo/addons,/mnt/custom-addons
+
+db_name = ${DB_NAME}
+db_host = db
+db_port = ${DB_PORT}
+db_user = ${DB_USER}
+db_password = ${DB_PASSWORD}
+filestore = /var/lib/odoo/filestore
+update_module_list = true
+stop_after_copied_data = false
+
+# OpenUpgrade specific options
+#logfile = /var/log/odoo/openupgrade.log
+log_level = info
+
+
+# Ignore modules that cause issues (add problematic custom modules here)
+# server_wide_modules = base,web

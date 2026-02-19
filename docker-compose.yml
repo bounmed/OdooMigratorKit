@@ -1,0 +1,27 @@
+# Author: Mohamed Bouzahir
+
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8888:8080
+  odoov16:
+      build:
+        context: ./Odoo16
+      depends_on:
+        db:
+          condition: service_healthy
+      ports:
+        - "8070:8069"
+      volumes:
+        - ./Odoo16/odoo.conf:/etc/odoo/odoo.conf
+        - ./Odoo16/custom-addons:/mnt/custom-addons
+        - odoo-data:/var/lib/odoo:z
+      restart: unless-stopped
+      user: "0:0"
+volumes:
+  odoo-db-data:
+  odoo-data:
+    external: true
+    name: odoo-data

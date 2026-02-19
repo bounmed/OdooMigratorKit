@@ -1,0 +1,61 @@
+# Use official Python 3.13 image based on Debian Bullseye
+FROM python:3.13-bullseye
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libxml2 \
+    libxml2-dev \
+    libxslt1.1 \
+    libxslt1-dev \
+    libldap-2.4-2 \
+    libldap2-dev \
+    libsasl2-2 \
+    libsasl2-dev \
+    libpq5 \
+    libpq-dev \
+    libcurl3-gnutls \
+    libgnutls30 \
+    libjpeg62-turbo \
+    libjpeg62-turbo-dev \
+    zlib1g \
+    zlib1g-dev \
+    build-essential \
+    postgresql-client \
+    git \
+    wget \
+    curl \
+    gettext-base \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --upgrade pip setuptools
+
+# 1. Clone Odoo 17 core
+RUN git clone https://github.com/odoo/odoo.git --branch 17.0 --depth 1 /opt/odoo
+# 2. Clone OpenUpgrade 17
+RUN curl -L https://github.com/OCA/OpenUpgrade/archive/refs/heads/17.0.tar.gz | tar -xz -C /opt && \
+    mv /opt/OpenUpgrade-17.0 /opt/openupgrade
+# 3. Install requirements for both
+RUN cd /opt/odoo && pip install -r requirements.txt
+RUN cd /opt/openupgrade && pip install -r requirements.txt
+
+
+# Copy custom addons (but they should be disabled initially during migration)
+ADD custom-addons /mnt/custom-addons
+
+# Copy migration scripts
+RUN mkdir /migration
+COPY pre.sql /migration/pre.sql
+COPY post.sql /migration/post.sql
+COPY pre-migration.sh /migration/pre-migration.sh
+COPY post-migration.sh /migration/post-migration.sh
+COPY openupgrade.conf.template /migration/openupgrade.conf.template
+
+# Copy entrypoint script
+COPY run-migration.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["migrate"]
