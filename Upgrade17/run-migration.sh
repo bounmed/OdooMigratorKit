@@ -43,6 +43,9 @@ if [ "$1" = "migrate" ]; then
     else
         echo "Skipping pre-migration scripts (SKIP_PRE_MIGRATION=$SKIP_PRE_MIGRATION)"
     fi
+    # Run OpenUpgrade migration
+    python3 /opt/odoo/odoo-bin --config=/opt/openupgrade/openupgrade.conf --upgrade-path=/opt/openupgrade/openupgrade_scripts/scripts  -d DB_NAME -u all --stop-after-init  --load=base,web,openupgrade_framework
+    
     # Execute post-migration.sh files
     find /migration -name "post-migration.sh" -type f | while read -r file; do
         chmod +x "$file"  # Make sure the script is executable
